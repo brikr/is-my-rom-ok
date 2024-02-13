@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Is my ROM ok?</title>
+    <script type="text/javascript" src="https://www.unpkg.com/js-md5@0.8.3/src/md5.js"></script>
+    <script type="text/javascript">
+      const KNOWN_HASHES = {
+        '20b854b239203baf6c961b850a4a51a2': 'Super Mario 64 (U)',
+        '85d61f5525af708c9f1e84dce6dc10e9': 'Super Mario 64 (J)'
+      };
+
+      let mainDiv;
+
+      window.addEventListener('DOMContentLoaded', () => {
+        mainDiv = document.getElementById('main');
+        mainDiv.addEventListener('drop', fileUploaded)
+
+        mainDiv.addEventListener('dragover', fileDraggedOver)
+        window.addEventListener('dragenter', fileDragEnter)
+        window.addEventListener('dragleave', fileDragLeave)
+      });
+
+      function fileUploaded(event) {
+        document.getElementById('main').classList.remove('file-over');
+        const file = event.dataTransfer.files[0];
+        if (file) {
+          const reader = new FileReader();
+
+          reader.addEventListener('load', e => {
+            // calculate hash and then update doc
+            const hash = md5(e.target.result);
+            displayResult(hash, file.name);
+          });
+
+          reader.readAsArrayBuffer(file);
+        }
+
+        event.preventDefault()
+      }
+
+      function fileDraggedOver(event) {
+        event.preventDefault();
+      }
+
+      function fileDragEnter(event) {
+        console.log('dragenter');
+        mainDiv.classList.add('file-over');
+        event.preventDefault();
+      }
+
+      function fileDragLeave(event) {
+        if (event.fromElement === null) {
+          mainDiv.classList.remove('file-over');
+          event.preventDefault();
+        }
+      }
+
+      function displayResult(hash, fileName) {
+        document.getElementById('default').style.display = 'none';
+        const resultDiv = document.getElementById('result');
+        const infoP = resultDiv.querySelector('.info');
+        const hashP = resultDiv.querySelector('.hash');
+        const filenameP = resultDiv.querySelector('.filename');
+
+        const rom = KNOWN_HASHES[hash];
+        if (rom) {
+          // Recognized
+          infoP.innerHTML = `This is a valid ${rom} ROM`;
+        } else {
+          // Unrecognized
+          infoP.innerHTML = `This ROM is unrecognized. Use it at your own risk.`;
+        }
+        filenameP.innerHTML = `File name: <code>${fileName}</code>`;
+        hashP.innerHTML = `MD5: <code>${hash}</code>`;
+
+
+        result.style.display = 'block';
+      }
+    </script>
+    <style>
+      body {
+        background: #242220;
+        color: #ffffffd0;
+
+        font-family: Arial, Helvetica, sans-serif;
+
+        margin: 0;
+      }
+
+      #main {
+        height: calc(100vh - 200px);
+        padding-top: 200px;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        text-align: center;
+      }
+
+      #main div {
+        flex-grow: 1;
+      }
+
+      .file-over {
+        background: #444240;
+      }
+
+      #result {
+        display: none;
+      }
+
+      footer {
+        color: #ffffffa0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="main">
+      <div id="default">
+        <h1>Is my ROM ok?</h1>
+        <p>Drag and drop your ROM file anywhere on this page.</p>
+        <p>Nintendo 64 ROMs are typically a <code>.z64</code> or <code>.n64</code> file. <strong>They are never <code>.exe</code> files.</strong></p>
+      </div>
+      <div id="result">
+        <h1 class="info"></h1>
+        <p class="filename"></p>
+        <p class="hash"></p>
+        <p>You can still test another ROM by dragging it onto this page.</p>
+      </div>
+      <footer>
+        <p>Hastily made with ❤️ by minikori</p>
+      </footer>
+    </div>
+  </body>
+</html>
